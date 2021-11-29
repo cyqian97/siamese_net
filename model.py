@@ -4,6 +4,7 @@ import config
 from tqdm import tqdm
 import torch.nn as nn
 from utils import show_plot
+from os.path import join
 
 
 # create a siamese network
@@ -74,12 +75,13 @@ def training(train_dataloader, optimizer, net, criterion):
         iteration_number += 10
         counter.append(iteration_number)
         loss.append(loss_contrastive.item())
-        if loss_contrastive.item()<loss_min:
+        if loss_contrastive.item() < loss_min:
             loss_min = loss_contrastive.item()
             torch.save(net.state_dict(),
-                       str(optimizer).replace("(", "").replace(")", "").replace('\n', " ").replace(': ', "-").replace("    ", "")
-                       +" batch-"+str(i+1)
-                       +".pth")
+                       join("state_dict",
+                            str(optimizer).replace("(", "").replace(")", "").replace('\n', " ").replace(': ',"-").replace("    ", "")
+                            + " batch_size-" + str(train_dataloader.batch_size)
+                            + ".pth"))
             print("new model saved")
     show_plot(counter, loss)
     return net

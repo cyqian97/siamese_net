@@ -54,8 +54,7 @@ net = SiameseNetwork().cuda()
 # Decalre Loss Function
 criterion = ContrastiveLoss()
 # Declare Optimizer
-optimizer = torch.optim.AdamW(net.parameters(), lr=1e-4, weight_decay=0.0005)#lr=1e-3, weight_decay=0.0005)
-
+optimizer = torch.optim.AdamW(net.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
 
 
@@ -79,7 +78,7 @@ def run():
         ),
     )
 
-    test_dataloader = DataLoader(test_dataset, num_workers=6, batch_size=1, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, num_workers=8, batch_size=1, shuffle=True)
 
     count = 0
     for i, data in enumerate(test_dataloader, 0):
