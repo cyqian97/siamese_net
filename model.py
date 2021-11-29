@@ -29,22 +29,31 @@ class SiameseNetwork(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(3, stride=2),
             nn.Dropout2d(p=0.3),
-        )
-
-        # Defining the fully connected layers
-        self.fc1 = nn.Sequential(
-            nn.Linear(30976, 1024),
+            # modifications
+            nn.Flatten(),
+            nn.Linear(108800, 1024),
             nn.ReLU(inplace=True),
             nn.Dropout2d(p=0.5),
             nn.Linear(1024, 128),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True)
+
         )
+
+        # # Defining the fully connected layers
+        # self.fc1 = nn.Sequential(
+        #     nn.Linear(30976, 1024),
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout2d(p=0.5),
+        #     nn.Linear(1024, 128),
+        #     nn.ReLU(inplace=True),
+        # )
 
     def forward_once(self, x):
         # Forward pass
+        # output = self.cnn1(x)
+        # output = output.view(output.size()[0], -1)
+        # output = self.fc1(output)
         output = self.cnn1(x)
-        output = output.view(output.size()[0], -1)
-        output = self.fc1(output)
         return output
 
     def forward(self, input1, input2):

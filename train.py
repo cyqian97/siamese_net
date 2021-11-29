@@ -28,7 +28,7 @@ siamese_dataset = SiameseDataset(
     training_csv,
     training_dir,
     transform=transforms.Compose(
-        [transforms.Resize((105, 105)), transforms.ToTensor()]
+        [transforms.Resize((config.img_height, config.img_width)), transforms.ToTensor()]
     ),
 )
 
@@ -74,7 +74,7 @@ def run():
         training_csv=testing_csv,
         training_dir=testing_dir,
         transform=transforms.Compose(
-            [transforms.Resize((105, 105)), transforms.ToTensor()]
+            [transforms.Resize((config.img_height,config.img_width)), transforms.ToTensor()]
         ),
     )
 

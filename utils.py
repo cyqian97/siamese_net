@@ -28,8 +28,8 @@ class SiameseDataset:
 
         # Apply image transformations
         if self.transform is not None:
-            img0 = self.transform(img0)
-            img1 = self.transform(img1)
+            img0 = 1-self.transform(img0)
+            img1 = 1-self.transform(img1)
 
         return (
             img0,
