@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn.functional as F
 
 
-class ContrastiveLoss(th.nn.Module):
+class ContrastiveLoss(torch.nn.Module):
     "Contrastive loss function"
 
     def __init__(self, margin=2.0):
