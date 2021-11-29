@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class ContrastiveLoss(torch.nn.Module):
     "Contrastive loss function"
 
-    def __init__(self, margin=1.0, alpha=1e-4, beta=0.75):
+    def __init__(self, margin=1.0, alpha=0.5, beta=0.5):
         super(ContrastiveLoss, self).__init__()
         self.margin = margin
         self.alpha = alpha

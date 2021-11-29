@@ -35,7 +35,7 @@ class SiameseDataset:
             img0,
             img1,
             torch.from_numpy(
-                np.array([int(self.train_df.iat[index, 2])], dtype=np.uint8)
+                np.array([int(self.train_df.iat[index, 2])], dtype=np.float)
             ),
         )
 

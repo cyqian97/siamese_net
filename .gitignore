@@ -1,3 +1,5 @@
 dataset/
 .idea/
 __pycache__/
+state_dict/
+dataset.zip
