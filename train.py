@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset,random_split
 import matplotlib.pyplot as plt
 import torchvision.utils
-import config as config
+import config_gcp as config
 from utils import imshow, show_plot, SiameseDataset
 from contrastive import ContrastiveLoss
 import torchvision
@@ -21,14 +21,12 @@ testing_dir = config.testing_dir
 training_csv = config.training_csv
 testing_csv = config.testing_csv
 
-
-
 # Load the the dataset from raw image folders
 siamese_dataset = SiameseDataset(
     training_csv,
     training_dir,
     transform=transforms.Compose(
-        [transforms.Resize((config.img_height, config.img_width)), transforms.ToTensor()]
+        [transforms.Resize((config.img_height, config.img_width)), transforms.ToTensor(),transforms.Normalize(mean = 0.060600653, std=0.12516373)]
     ),
 )
 
@@ -64,7 +62,6 @@ net = SiameseNetwork().cuda()
 criterion = ContrastiveLoss()
 # Declare Optimizer
 optimizer = torch.optim.AdamW(net.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
-
 
 
 def run():

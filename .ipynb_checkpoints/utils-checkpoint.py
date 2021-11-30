@@ -132,3 +132,22 @@ def sortKeyGenerator(i):
         return v[i]
 
     return sortKey
+
+def generate_csv(dir, total_number=0):
+    for directory in os.listdir(dir)[0:-1:2]:
+        for root, dirs, files in os.walk(os.path.join(dir, directory)):
+            sigT = files
+        for root, dirs, files in os.walk(os.path.join(dir, directory + "_forg")):
+            sigF = files
+            print(sigF)
+        for pair in itertools.combinations(sigT, 2):
+            rows.append([os.path.join(directory, pair[0]), os.path.join(directory, pair[1]), '1'])
+        for pair in itertools.product(sigT, sigF):
+            rows.append([os.path.join(directory, pair[0]), os.path.join(directory + "_forg", pair[1]), '0'])
+    if 0 < total_number < len(rows):
+        rows = random.sample(rows, total_number)
+    
+    with open('train_data.csv', 'w', newline='') as csvfile:
+        spamwriter = csv.writer(csvfile, delimiter=',',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        spamwriter.writerows(rows)
