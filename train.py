@@ -51,6 +51,8 @@ train_dataloader = DataLoader(
     siamese_train, shuffle=True, num_workers=8, batch_size=config.batch_size
 )
 
+valid_dataloader = DataLoader(siamese_valid,shuffle=True,num_workers=8,batch_size=1)
+
 # Declare Siamese Network
 net = SiameseNetwork().cuda()
 # Decalre Loss Function
@@ -66,7 +68,7 @@ def run():
     # set the device to cuda
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("start training")
-    model = training(train_dataloader,optimizer,net,criterion)
+    model = training(train_dataloader,valid_dataloader,optimizer,net,criterion)
 
     # torch.save(model.state_dict(), "model.pt")
     # print("Model Saved Successfully")

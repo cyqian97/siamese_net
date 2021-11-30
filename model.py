@@ -1,10 +1,14 @@
+import math
+
+import numpy as np
 import torch
 
 import config
 from tqdm import tqdm
 import torch.nn as nn
-from utils import show_plot
+from utils import show_plot,decision_stub
 from os.path import join
+from torch.nn.functional import pairwise_distance
 
 
 # create a siamese network
@@ -65,9 +69,10 @@ class SiameseNetwork(nn.Module):
 
 
 # train the model
-def training(train_dataloader, optimizer, net, criterion):
+def training(train_dataloader, valid_dataloader, optimizer, net, criterion):
     loss = []
     loss_min = 1000
+    valid_er_min = math.inf
     counter = []
     iteration_number = 0
 
@@ -80,16 +85,28 @@ def training(train_dataloader, optimizer, net, criterion):
             loss_contrastive = criterion(output1, output2, label)
             loss_contrastive.backward()
             optimizer.step()
-        print("Epoch {}\n Current loss {}\n".format(epoch, loss_contrastive.item()))
+
+        # Empirical error on the validation set
+        valid_distance = np.zeros((valid_dataloader.__len__,2))
+        for i, data in enumerate(valid_dataloader,0):
+            img0, img1, label = data
+            img0, img1 = img0.cuda(), img1.cuda()
+            output1, output2 = net(img0, img1)
+            valid_distance[i,0] = pairwise_distance(output1,output2)
+            valid_distance[i,1] = label*2-1
+        valid_er = decision_stub(valid_distance)
+
+        print("Epoch {}\t Train loss {}\t Validation ER".format(epoch, loss_contrastive.item(),valid_er))
         iteration_number += 10
         counter.append(iteration_number)
         loss.append(loss_contrastive.item())
-        if loss_contrastive.item() < loss_min:
-            loss_min = loss_contrastive.item()
+        if valid_er < valid_er_min:
+            valid_er_min = valid_er
             torch.save(net.state_dict(),
                        join("state_dict",
                             str(optimizer).replace("(", "").replace(")", "").replace('\n', " ").replace(': ',"-").replace("    ", "")
                             + " batch_size-" + str(train_dataloader.batch_size)
+                            + "validation_error" + str(valid_er_min)
                             + ".pth"))
             print("new model saved")
     show_plot(counter, loss)
