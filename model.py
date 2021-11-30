@@ -96,7 +96,7 @@ def training(train_dataloader, valid_dataloader, optimizer, net, criterion):
             valid_distance[i,1] = label*2-1
         valid_er = decision_stub(valid_distance)
 
-        print("Epoch {}\t Train loss {}\t Validation ER".format(epoch, loss_contrastive.item(),valid_er))
+        print("Epoch {}\t Train loss {}\t Validation ER {}".format(epoch, loss_contrastive.item(),valid_er))
         iteration_number += 10
         counter.append(iteration_number)
         loss.append(loss_contrastive.item())
@@ -109,5 +109,5 @@ def training(train_dataloader, valid_dataloader, optimizer, net, criterion):
                             + "validation_error" + str(valid_er_min)
                             + ".pth"))
             print("new model saved")
-    show_plot(counter, loss)
+    # show_plot(counter, loss)
     return net

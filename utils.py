@@ -5,7 +5,10 @@ import os
 import torch
 import pandas as pd
 from PIL import Image
-
+import os
+import csv
+import random
+import itertools
 
 class SiameseDataset:
     def __init__(self, training_csv=None, training_dir=None, transform=None):
@@ -118,9 +121,9 @@ def decision_stub(train_data):
             j_star = j
             b_star = -1
 
-    print(
-        "j_star = %d\ntheta_star = %f\npolorization = %d\nEmpirical Error = %f\n" % (
-        j_star, theta_star, b_star, F_star / m))
+    # print(
+    #     "j_star = %d\ntheta_star = %f\npolorization = %d\nEmpirical Error = %f\n" % (
+    #     j_star, theta_star, b_star, F_star / m))
     return F_star / m
 
 def sortKeyGenerator(i):
@@ -128,3 +131,21 @@ def sortKeyGenerator(i):
         return v[i]
 
     return sortKey
+
+def generate_csv(dir, total_number=0):
+    with open('train_data.csv', 'w', newline='') as csvfile:
+        spamwriter = csv.writer(csvfile, delimiter=',',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        rows = []
+        for directory in os.listdir(dir)[0:-1:2]:
+            for root, dirs, files in os.walk(os.path.join(dir, directory)):
+                sigT = files
+            for root, dirs, files in os.walk(os.path.join(dir, directory + "_forg")):
+                sigF = files
+            for pair in itertools.combinations(sigT, 2):
+                rows.append([os.path.join(directory, pair[0]), os.path.join(directory, pair[1]), '1'])
+            for pair in itertools.product(sigT, sigF):
+                rows.append([os.path.join(directory, pair[0]), os.path.join(directory + "_forg", pair[1]), '0'])
+        if 0 < total_number < len(rows):
+            rows = random.sample(rows, total_number)
+        spamwriter.writerows(rows)

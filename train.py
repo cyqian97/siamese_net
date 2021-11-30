@@ -32,8 +32,11 @@ siamese_dataset = SiameseDataset(
     ),
 )
 
-# Split the dataset into train and valid
-siamese_train, siamese_valid = random_split(siamese_dataset, [round(0.8*siamese_dataset.__len__()), round(0.2*siamese_dataset.__len__())])
+# Split the dataset into train, validation and test sets
+num_train = round(0.8*siamese_dataset.__len__())
+num_validate = round(0.1*siamese_dataset.__len__())
+num_test = siamese_dataset.__len__()-num_train-num_validate
+siamese_train, siamese_valid, siamese_test = random_split(siamese_dataset, [num_train,num_validate,num_test])
 
 # Viewing the sample of images and to check whether its loading properly
 # vis_dataloader = DataLoader(siamese_dataset, shuffle=True, batch_size=8)
@@ -52,6 +55,8 @@ train_dataloader = DataLoader(
 )
 
 valid_dataloader = DataLoader(siamese_valid,shuffle=True,num_workers=8,batch_size=1)
+
+test_dataloader = DataLoader(siamese_test, num_workers=8, batch_size=1, shuffle=True)
 
 # Declare Siamese Network
 net = SiameseNetwork().cuda()
@@ -82,12 +87,10 @@ def run():
         ),
     )
 
-    test_dataloader = DataLoader(test_dataset, num_workers=8, batch_size=1, shuffle=True)
-
     count = 0
     for i, data in enumerate(test_dataloader, 0):
         x0, x1, label = data
-        concat = torch.cat((x0, x1), 0)
+        # concat = torch.cat((x0, x1), 0)
         output1, output2 = model(x0.to(device), x1.to(device))
 
         eucledian_distance = F.pairwise_distance(output1, output2)
@@ -97,11 +100,11 @@ def run():
         else:
             label = "Forged Pair Of Signature"
 
-        imshow(torchvision.utils.make_grid(concat))
+        # imshow(torchvision.utils.make_grid(concat))
         print("Predicted Eucledian Distance:-", eucledian_distance.item())
         print("Actual Label:-", label)
         count = count + 1
-        if count == 10:
+        if count == 100:
             break
 
 
