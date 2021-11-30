@@ -5,10 +5,10 @@ import torch
 import torch.nn.functional as F
 import torch.utils.data as utils
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset,random_split
 import matplotlib.pyplot as plt
 import torchvision.utils
-import config_gcp as config
+import config as config
 from utils import imshow, show_plot, SiameseDataset
 from contrastive import ContrastiveLoss
 import torchvision
@@ -32,6 +32,8 @@ siamese_dataset = SiameseDataset(
     ),
 )
 
+# Split the dataset into train and valid
+siamese_train, siamese_valid = random_split(siamese_dataset, [round(0.8*siamese_dataset.__len__()), round(0.2*siamese_dataset.__len__())])
 
 # Viewing the sample of images and to check whether its loading properly
 # vis_dataloader = DataLoader(siamese_dataset, shuffle=True, batch_size=8)
@@ -46,7 +48,7 @@ siamese_dataset = SiameseDataset(
 
 # Load the dataset as pytorch tensors using dataloader
 train_dataloader = DataLoader(
-    siamese_dataset, shuffle=True, num_workers=8, batch_size=config.batch_size
+    siamese_train, shuffle=True, num_workers=8, batch_size=config.batch_size
 )
 
 # Declare Siamese Network
