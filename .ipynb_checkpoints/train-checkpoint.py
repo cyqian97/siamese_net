@@ -4,12 +4,11 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 import torch.utils.data as utils
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset,random_split
 import matplotlib.pyplot as plt
 import torchvision.utils
 import config_gcp as config
-from utils import imshow, show_plot, SiameseDataset
+from utils import imshow, show_plot, load_dataset
 from contrastive import ContrastiveLoss
 import torchvision
 from model import SiameseNetwork,training
@@ -21,14 +20,7 @@ testing_dir = config.testing_dir
 training_csv = config.training_csv
 testing_csv = config.testing_csv
 
-# Load the the dataset from raw image folders
-siamese_dataset = SiameseDataset(
-    training_csv,
-    training_dir,
-    transform=transforms.Compose(
-        [transforms.Resize((config.img_height, config.img_width)), transforms.ToTensor(),transforms.Normalize(mean = 0.060600653, std=0.12516373)]
-    ),
-)
+siamese_dataset = load_dataset(training_dir,training_csv)
 
 # Split the dataset into train, validation and test sets
 num_train = round(0.8*siamese_dataset.__len__())
@@ -59,7 +51,7 @@ test_dataloader = DataLoader(siamese_test, num_workers=8, batch_size=1, shuffle=
 # Declare Siamese Network
 net = SiameseNetwork().cuda()
 # Decalre Loss Function
-criterion = ContrastiveLoss()
+criterion = ContrastiveLoss(alpha = config.alpha, beta = config.beta)
 # Declare Optimizer
 optimizer = torch.optim.AdamW(net.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
@@ -72,17 +64,6 @@ def run():
     print("start training")
     model = training(train_dataloader,valid_dataloader,optimizer,net,criterion)
 
-    # torch.save(model.state_dict(), "model.pt")
-    # print("Model Saved Successfully")
-
-    # Load the test dataset
-    test_dataset = SiameseDataset(
-        training_csv=testing_csv,
-        training_dir=testing_dir,
-        transform=transforms.Compose(
-            [transforms.Resize((config.img_height,config.img_width)), transforms.ToTensor()]
-        ),
-    )
 
     count = 0
     for i, data in enumerate(test_dataloader, 0):
@@ -101,9 +82,8 @@ def run():
         print("Predicted Eucledian Distance:-", eucledian_distance.item())
         print("Actual Label:-", label)
         count = count + 1
-        if count == 100:
+        if count == 10:
             break
-
 
 if __name__ == '__main__':
     run()

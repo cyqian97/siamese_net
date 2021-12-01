@@ -10,6 +10,8 @@ import csv
 import random
 import itertools
 from copy import deepcopy
+import config
+import torchvision.transforms as transforms
 
 class SiameseDataset:
     def __init__(self, training_csv=None, training_dir=None, transform=None):
@@ -47,27 +49,20 @@ class SiameseDataset:
         return len(self.train_df)
 
 
-def imshow(img, text=None, should_save=False):
-    npimg = img.numpy()
-    plt.axis("off")
-    if text:
-        plt.text(
-            75,
-            8,
-            text,
-            style="italic",
-            fontweight="bold",
-            bbox={"facecolor": "white", "alpha": 0.8, "pad": 10},
-        )
-    plt.imshow(np.transpose(npimg, (1, 2, 0)))
-    plt.show()
+# Load the the dataset from raw image folders
+def load_dataset(training_dir,training_csv):
+    siamese_dataset = SiameseDataset(
+    training_csv,
+    training_dir,
+    transform=transforms.Compose(
+        [transforms.Resize((config.img_height, config.img_width)), 
+         transforms.ToTensor(),
+         transforms.Normalize(mean = 0.060600653, std=0.12516373)]),
+    )
+    return siamese_dataset
 
 
-def show_plot(iteration, loss):
-    plt.plot(iteration, loss)
-    plt.show()
-
-def decision_stub(train_data):
+def decision_stub(train_data,verbose=False):
     F_star = math.inf
     m = len(train_data)
     d = len(train_data[0]) - 1
@@ -121,10 +116,25 @@ def decision_stub(train_data):
             theta_star = train_data[i][j] + 0.5
             j_star = j
             b_star = -1
-
-    # print(
-    #     "j_star = %d\ntheta_star = %f\npolorization = %d\nEmpirical Error = %f\n" % (
-    #     j_star, theta_star, b_star, F_star / m))
+    if verbose:
+            train_data = np.array(train_data)
+            print("+1/-1 ratrio:%.2f/%.2f"%(0.5+np.sum(train_data[:,-1])/m/2,0.5-np.sum(train_data[:,-1])/m/2))
+            print("+1 features max:%.2f\t min:%.2f\t mean:%.2f\t median %.2f" %(
+                np.max(train_data[train_data[:,-1]==1,j_star]),
+                np.min(train_data[train_data[:,-1]==1,j_star]),
+                np.mean(train_data[train_data[:,-1]==1,j_star]),
+                np.median(train_data[train_data[:,-1]==1,j_star])
+            ))            
+            print("-1 features max:%.2f\t min:%.2f\t mean:%.2f\t median %.2f" %(
+                np.max(train_data[train_data[:,-1]==-1,j_star]),
+                np.min(train_data[train_data[:,-1]==-1,j_star]),
+                np.mean(train_data[train_data[:,-1]==-1,j_star]),
+                np.median(train_data[train_data[:,-1]==-1,j_star])
+            ))
+            
+            print(
+                "j_star = %d\ttheta_star = %f\tpolorization = %d\tEmpirical Error = %f" % (
+                    j_star, theta_star, b_star, F_star / m))
     return F_star / m
 
 def sortKeyGenerator(i):
@@ -132,3 +142,24 @@ def sortKeyGenerator(i):
         return v[i]
 
     return sortKey
+
+
+def imshow(img, text=None, should_save=False):
+    npimg = img.numpy()
+    plt.axis("off")
+    if text:
+        plt.text(
+            75,
+            8,
+            text,
+            style="italic",
+            fontweight="bold",
+            bbox={"facecolor": "white", "alpha": 0.8, "pad": 10},
+        )
+    plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    plt.show()
+
+
+def show_plot(iteration, loss):
+    plt.plot(iteration, loss)
+    plt.show()

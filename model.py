@@ -68,15 +68,15 @@ class SiameseNetwork(nn.Module):
         return output1, output2
 
 
+# +
 # train the model
 def training(train_dataloader, valid_dataloader, optimizer, net, criterion):
-    loss = []
-    loss_min = 1000
+    loss_min = math.inf
     valid_er_min = math.inf
-    counter = []
     iteration_number = 0
-
+    
     for epoch in range(1, config.epochs):
+        print("Epoch ",epoch," training")
         for i, data in enumerate(tqdm(train_dataloader), 0):
             img0, img1, label = data
             img0, img1, label = img0.cuda(), img1.cuda(), label.cuda()
@@ -86,28 +86,60 @@ def training(train_dataloader, valid_dataloader, optimizer, net, criterion):
             loss_contrastive.backward()
             optimizer.step()
 
+        
         # Empirical error on the validation set
         valid_distance = np.zeros((valid_dataloader.__len__(),2))
-        for i, data in enumerate(valid_dataloader,0):
+        print("Epoch ",epoch," validating")
+        valid_loss = 0
+        for i, data in enumerate(tqdm(valid_dataloader),0):
             img0, img1, label = data
             img0, img1 = img0.cuda(), img1.cuda()
             output1, output2 = net(img0, img1)
             valid_distance[i,0] = pairwise_distance(output1,output2).detach().cpu().numpy()
-            valid_distance[i,1] = label.detach().cpu().numpy()*2-1
-        valid_er = decision_stub(valid_distance.tolist())
+            valid_distance[i,1] = 1-label.detach().cpu().numpy()*2
+            valid_loss += criterion(output1, output2, label)
+            
+        print("Epoch {}\t Train loss {}".format(epoch, loss_contrastive.item()))    
+        
+        # Use decision stub to find the best threshhold
+        valid_er = decision_stub(valid_distance.tolist(),verbose=True)
+        
+#         valid_loss = 0
+#         for loss in valid_distance.tolist():
+#             if loss[-1]==1: valid_loss+=loss[0]**2/2
+#             if loss[-1]==-1: valid_loss+=min(0,1-loss[0])**2/2
 
-        print("Epoch {}\t Train loss {}\t Validation ER {}".format(epoch, loss_contrastive.item(),valid_er))
-        iteration_number += 10
-        counter.append(iteration_number)
-        loss.append(loss_contrastive.item())
-        if valid_er < valid_er_min:
+        print("Validation loss: %.4f"%(valid_loss/valid_dataloader.__len__()))
+
+
+        
+        # Save state_dict if there is any improvement
+        if epoch>1:
+            if valid_er < valid_er_min:
+                valid_er_min = valid_er
+                d = optimizer.state_dict()['param_groups'][0]
+                torch.save(net.state_dict(),
+                           join("state_dict",
+                                "AdamW"+ " lr-"+str(d['lr'])
+                                + " wd-"+str(d['weight_decay'])
+                                + " batch_size-" + str(train_dataloader.batch_size)
+                                + " loss-" + str(loss_contrastive.item())
+                                + "validation_error" + str(valid_er)
+                                + ".pth"))
+                print("new model saved")
+            elif loss_contrastive.item() < loss_min:
+                loss_min = loss_contrastive.item()
+                d = optimizer.state_dict()['param_groups'][0]
+                torch.save(net.state_dict(),
+                           join("state_dict",
+                                "AdamW"+ " lr-"+str(d['lr'])
+                                + " wd-"+str(d['weight_decay'])
+                                + " batch_size-" + str(train_dataloader.batch_size)
+                                + " loss-" + str(loss_contrastive.item())
+                                + " validation_error" + str(valid_er)
+                                + ".pth"))
+                print("new model saved")
+        else:
+            loss_min = loss_contrastive.item()
             valid_er_min = valid_er
-            torch.save(net.state_dict(),
-                       join("state_dict",
-                            str(optimizer).replace("(", "").replace(")", "").replace('\n', " ").replace(': ',"-").replace("    ", "")
-                            + " batch_size-" + str(train_dataloader.batch_size)
-                            + "validation_error" + str(valid_er_min)
-                            + ".pth"))
-            print("new model saved")
-    # show_plot(counter, loss)
     return net
