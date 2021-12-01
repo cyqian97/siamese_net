@@ -1,13 +1,12 @@
 import math
-
-import numpy as np
 import torch
-
-import config
+import numpy as np
 from tqdm import tqdm
 import torch.nn as nn
-from utils import show_plot,decision_stub
 from os.path import join
+import config_gcp as config
+from contrastive import contrastiveLoss_func
+from utils import show_plot,decision_stub
 from torch.nn.functional import pairwise_distance
 
 
@@ -73,8 +72,7 @@ class SiameseNetwork(nn.Module):
 def training(train_dataloader, valid_dataloader, optimizer, net, criterion):
     loss_min = math.inf
     valid_er_min = math.inf
-    iteration_number = 0
-    
+#     iteration_number = 0
     for epoch in range(1, config.epochs):
         print("Epoch ",epoch," training")
         for i, data in enumerate(tqdm(train_dataloader), 0):
@@ -93,11 +91,15 @@ def training(train_dataloader, valid_dataloader, optimizer, net, criterion):
         valid_loss = 0
         for i, data in enumerate(tqdm(valid_dataloader),0):
             img0, img1, label = data
-            img0, img1 = img0.cuda(), img1.cuda()
+            img0, img1, label = img0.cuda(), img1.cuda(), label.cuda()
             output1, output2 = net(img0, img1)
             valid_distance[i,0] = pairwise_distance(output1,output2).detach().cpu().numpy()
             valid_distance[i,1] = 1-label.detach().cpu().numpy()*2
-            valid_loss += criterion(output1, output2, label)
+            valid_loss += contrastiveLoss_func(output1, output2, label,
+                                              margin = criterion.margin,
+                                               alpha = criterion.alpha,
+                                               beta = criterion.beta
+                                              ).detach().cpu().numpy()
             
         print("Epoch {}\t Train loss {}".format(epoch, loss_contrastive.item()))    
         

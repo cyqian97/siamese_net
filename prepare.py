@@ -1,11 +1,11 @@
 import os
 import csv
 import torch
-import config
 import random
 import itertools
 from PIL import Image
 from copy import deepcopy
+import config_gcp as config
 import torchvision.transforms as transforms
 
 

@@ -1,16 +1,15 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import os
 import math
-import os
 import torch
-import pandas as pd
-from PIL import Image
-import os
 import csv
 import random
 import itertools
+import numpy as np
+import pandas as pd
+from PIL import Image
 from copy import deepcopy
-import config
+import config_gcp as config
+import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 
 class SiameseDataset:

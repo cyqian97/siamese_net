@@ -23,7 +23,7 @@ testing_csv = config.testing_csv
 siamese_dataset = load_dataset(training_dir,training_csv)
 
 # Split the dataset into train, validation and test sets
-num_train = round(0.8*siamese_dataset.__len__())
+num_train = round(0.1*siamese_dataset.__len__())
 num_validate = round(0.1*siamese_dataset.__len__())
 num_test = siamese_dataset.__len__()-num_train-num_validate
 siamese_train, siamese_valid, siamese_test = random_split(siamese_dataset, [num_train,num_validate,num_test])
@@ -51,7 +51,7 @@ test_dataloader = DataLoader(siamese_test, num_workers=8, batch_size=1, shuffle=
 # Declare Siamese Network
 net = SiameseNetwork().cuda()
 # Decalre Loss Function
-criterion = ContrastiveLoss(alpha = config.alpha, beta = config.beta)
+criterion = ContrastiveLoss()
 # Declare Optimizer
 optimizer = torch.optim.AdamW(net.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 

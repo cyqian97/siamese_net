@@ -1,12 +1,13 @@
 import torch
 import numpy as np
+import config_gcp as config
 import torch.nn.functional as F
 
 
 class ContrastiveLoss(torch.nn.Module):
     "Contrastive loss function"
 
-    def __init__(self, margin=1.0, alpha=0.5, beta=0.5):
+    def __init__(self, margin=1.0, alpha = config.alpha, beta = config.beta):
         super(ContrastiveLoss, self).__init__()
         self.margin = margin
         self.alpha = alpha
@@ -30,3 +31,15 @@ class ContrastiveLoss(torch.nn.Module):
 #                 loss += torch.pow(torch.min(self.margin - torch.sqrt(d2),0).values,2)*self.beta
 #         print("my loss: %.4f\n"%(loss/len(label)))
         return loss_contrastive
+
+
+def contrastiveLoss_func(output1, output2, label,margin=1.0, alpha = config.alpha, beta = config.beta):
+        euclidean_distance = F.pairwise_distance(output1, output2)
+
+        loss_contrastive = torch.mean(
+            alpha * (1 - label) * torch.pow(euclidean_distance, 2)
+            + beta * (label)
+            * torch.pow(torch.clamp(margin - euclidean_distance, min=0.0), 2)
+        )
+        return loss_contrastive
+        
